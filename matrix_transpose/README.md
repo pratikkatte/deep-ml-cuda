@@ -13,7 +13,7 @@ CUDA implementation of a 2D matrix transpose, converting a matrix of shape `(row
 
 ## Build
 ```bash
-nvcc solution.cu -o matrix_transpose
+nvcc matrix_transpose.cu -o matrix_transpose
 ```
 
 ## Run
