@@ -11,13 +11,13 @@ __global__ void transpose_kernel(
     // Implement the kernel to transpose the matrix
     // input is rows x cols, output should be cols x rows
 
-    int row = blockIdx.x * blockDim.x + threadIdx.x;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (row < rows){
-        for(int i=0;i<cols;i++){
-            output[i * rows + row] = input[row*cols+i];
-        }
-    };
+    if (row < rows && col < cols) {
+        output[col * rows + row] =
+            input[row * cols + col];
+    }
 }
 
 std::vector<std::vector<float>> transpose_matrix(const std::vector<std::vector<float>>& matrix) {
@@ -41,8 +41,12 @@ std::vector<std::vector<float>> transpose_matrix(const std::vector<std::vector<f
                cudaMemcpyHostToDevice);
 
     // Kernel launch
-    int threads = 256;
-    int blocks = (rows + threads - 1) / threads;
+
+    dim3 threads(16, 16);  // start small
+    dim3 blocks(
+    (cols + threads.x - 1) / threads.x,
+    (rows + threads.y - 1) / threads.y
+);
 
     transpose_kernel<<<blocks, threads>>>(
         flatMatrix_d, result_d, rows, cols
@@ -57,6 +61,7 @@ std::vector<std::vector<float>> transpose_matrix(const std::vector<std::vector<f
     cudaFree(flatMatrix_d);
     cudaFree(result_d);
 
+    // Reshape
     std::vector<std::vector<float>> result(
         cols, std::vector<float>(rows)
     );
